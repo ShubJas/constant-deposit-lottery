@@ -1,0 +1,27 @@
+{
+  "name": "ethereum-lottery",
+  "version": "1.0.0",
+  "description": "An Ethereum implementation of a constant-deposit multiparty lottery inspired by http://eprint.iacr.org/2016/955",
+  "dependencies": {
+    "dateformat": "^2.0.0",
+    "fs": "^0.0.1-security",
+    "left-pad": "^1.1.3",
+    "require": "^2.4.20",
+    "web3": "^0.17.0-beta",
+    "winston": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "echo \"Not implemented yet\" && exit 1"
+  },
+  "keywords": [
+    "ethereum",
+    "lottery",
+    "solidity",
+    "constant",
+    "deposit",
+    "multiparty"
+  ],
+  "author": "Nicola Atzei",
+  "license": "ISC"
+}
