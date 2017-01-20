@@ -1,4 +1,4 @@
-# Ethereum-lottery #
+# constant-deposit-lottery #
 
 A Solidity implementation of a constant-deposit lottery.
 
