@@ -4,7 +4,7 @@
 
 module.exports = Match;
 
-var conf = require('../../config/index');
+var conf = require('../../config');
 var utils = require('../../utils/index');
 
 /**

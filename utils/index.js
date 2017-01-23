@@ -7,7 +7,7 @@ var winston = require('winston');
 var dateFormat = require('dateformat');
 
 // set the provider you want from Web3.providers
-var web3 = new Web3(new Web3.providers.HttpProvider(conf.httpProvider.remote));
+var web3 = new Web3(new Web3.providers.HttpProvider(conf.httpProvider));
 
 var compiledContracts;
 

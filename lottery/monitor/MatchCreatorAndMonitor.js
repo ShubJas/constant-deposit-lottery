@@ -1,5 +1,5 @@
 
-var conf = require('../../config/index');
+var conf = require('../../config');
 var utils = require('../../utils/index');
 var fs = require('fs');
 var async = require('async');
@@ -10,7 +10,6 @@ var personal = web3.personal;
 
 function MatchCreator() {
 
-    this.matchAdvertiser = conf.addresses.Nicola;
     this.playerX = conf.addresses.Nicola;
     this.playerY = conf.addresses.Jansson;
     this.xSecret = 42;
@@ -36,7 +35,9 @@ MatchCreator.prototype.create = function() {
 
 MatchCreator.prototype.adversiteMatch = function(callback) {
     console.log("Adversiting match..");
-    personal.unlockAccount(this.matchAdvertiser, "");
+    personal.unlockAccount(
+        utils.users.advertiser.address,
+        utils.users.advertiser.password);
 
     /*
      * Parameters
@@ -66,7 +67,7 @@ MatchCreator.prototype.adversiteMatch = function(callback) {
         _timeout_x,
         _timeout_y,
         {
-            from: this.matchAdvertiser,
+            from: utils.users.advertiser.address,
             data: this.contract.code,
             gas: conf.gas,
             gasPrice: conf.gasPrice

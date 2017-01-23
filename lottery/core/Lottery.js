@@ -4,10 +4,9 @@
 
 module.exports = Lottery;
 
-var conf = require('../../config/index');
-var utils = require('../../utils/index');
-var async = require('async');
-var Match = require('./Match');
+const conf = require('../../config');
+const utils = require('../../utils/index');
+const Match = require('./Match');
 
 /**
  * Constructor of a lottery
@@ -86,7 +85,7 @@ Lottery.prototype.currentLevel = function() { return this.lottery.level().toStri
 /**
  * Register the player by sending the deposit and its encrypted secrets.
  */
-Lottery.prototype.register = function() {
+Lottery.prototype.registerAndPlay = function() {
     var _this = this;
 
     console.log();

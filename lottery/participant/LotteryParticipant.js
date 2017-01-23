@@ -2,61 +2,42 @@
  * Created by nicola on 25/11/16.
  */
 
-var utils = require('../../utils/index');
-var Lottery = require('./../core/Lottery');
+module.exports = LotteryParticipant;
 
+const conf = require('../../config');
+const utils = require('../../utils/index');
+const Lottery = require('./../core/Lottery');
 
-var p = process.argv[2];
-var levels = process.argv[3];
-var lotteryAddr = process.argv[4];
+function LotteryParticipant(id, levels, lotteryAddr) {
 
-var playerAddr;
-var alias;
-var plainSecrets = [];
-var salt = 42;
+    this.levels = levels;
+    this.lotteryContract =  utils.lotteryFromAddress(lotteryAddr);
+    this.playerAddr =       conf.players[id].address;
+    this.alias =            conf.players[id].alias;
+    this.password =         conf.players[id].password;
+    this.salt =             conf.players[id].salt;
 
-for (var i=0; i<levels; i++) {
-    plainSecrets.push(Math.ceil(Math.random()*11));
+    // secrets are generated randomly
+    this.plainSecrets =  [];
+    for (let i=0; i<levels; i++) {
+        this.plainSecrets.push(Math.ceil(Math.random()*11));
+    }
 }
 
-switch (p) {
-    case "0":
-        playerAddr = "0xb2eda2156386a938f4b008410a4dedbd1a51d5e9";
-        alias = "Alice";
-        break;
+LotteryParticipant.prototype.play = function() {
 
-    case "1":
-        playerAddr = "0xe2fe120d5bbc9a5af31dd6db5a22f32a055c41ed";
-        alias = "Bob";
-        break;
+    const lottery = new Lottery(
+        this.lotteryContract,
+        this.playerAddr,
+        this.password,
+        this.plainSecrets,
+        this.salt,
+        this.alias
+    );
 
-    case "2":
-        playerAddr = "0x84df6106d39ef3c896bb37be19f9306186263f53";
-        alias = "Carl";
-        break;
+    // play a match
+    lottery.registerAndPlay();
+};
 
-    case "3":
-        playerAddr = "0xcc5bdc44926d40c57dda3cef4763c808d3c4470e";
-        alias = "Donald";
-        break;
-}
 
-/*
- * check input
- */
-if (!lotteryAddr || !plainSecrets || !playerAddr) {
-    console.log("Invalid arguments!");
-    process.exit(-1);
-}
 
-var lottery = new Lottery(
-    utils.lotteryFromAddress(lotteryAddr),
-    playerAddr,
-    "",
-    plainSecrets,
-    salt,
-    alias
-);
-
-// playLoop a match
-lottery.register();

@@ -1,5 +1,7 @@
 
-var conf = require('../../config/index');
+module.exports = LotteryCreator;
+
+var conf = require('../../config');
 var utils = require('../../utils/index');
 var Lottery = require('./../core/Lottery');
 var fs = require('fs');
@@ -8,24 +10,17 @@ var async = require('async');
 var web3 = utils.web3;
 var eth = web3.eth;
 var personal = web3.personal;
-console.log("last block number:"+ web3.eth.blockNumber);
 
-// var playerX = "0xb2eda2156386a938f4b008410a4dedbd1a51d5e9";
-// var playerY = "0xe2fe120d5bbc9a5af31dd6db5a22f32a055c41ed";
-// var playerZ = "0x84df6106d39ef3c896bb37be19f9306186263f53";
-// var playerT = "0xcc5bdc44926d40c57dda3cef4763c808d3c4470e";
-// var secretX = 1;
-// var secretY = 2;
-// var secretZ = 3;
-// var secretT = 4;
+/**
+ *
+ * @param levels
+ * @param deposit
+ * @constructor
+ */
+function LotteryCreator(levels, deposit) {
 
-/**************************/
-
-function LotteryCreator() {
-
-    this.advertiser = conf.addresses.Nicola;
-    this.deposit = 1;
-    this.levels = process.argv[2];
+    this.levels = levels;
+    this.deposit = deposit;
 
     if (this.level<1)
         throw "level must be >= 1";
@@ -57,7 +52,9 @@ LotteryCreator.prototype.create = function() {
 LotteryCreator.prototype.adversiteLottery = function(callback) {
 
     console.log("Adversiting lottery..");
-    personal.unlockAccount(this.advertiser, "");
+    personal.unlockAccount(
+        conf.advertiser.address,
+        conf.advertiser.password);
 
     /*
      * Create the contract
@@ -67,7 +64,7 @@ LotteryCreator.prototype.adversiteLottery = function(callback) {
         this.levels,
         this.deposit,
         {
-            from: this.advertiser,
+            from: conf.advertiser.address,
             data: this.contract.code,
             gas: conf.gas,
             gasPrice: conf.gasPrice
@@ -81,6 +78,7 @@ LotteryCreator.prototype.adversiteLottery = function(callback) {
                 // e.g. check tx hash on the first call (transaction send)
                 if(lottery.address) {
                     console.log('Contract mined! https://testnet.etherscan.io/address/' + lottery.address);
+                    console.log('Lottery address: ' + lottery.address);
 
                     console.log();
                     console.log("-- Registration --");
@@ -88,6 +86,7 @@ LotteryCreator.prototype.adversiteLottery = function(callback) {
                 }
                 else {
                     console.log("Lottery advertised at https://testnet.etherscan.io/tx/"+lottery.transactionHash);
+                    console.log("Lottery advertised at tx: "+lottery.transactionHash);
                 }
             }
         }
@@ -174,7 +173,3 @@ LotteryCreator.prototype.cleanWatchers = function() {
     this.registrationDoneEvent.stopWatching();
     this.allRefundedEvent.stopWatching();
 };
-
-/****************************************/
-
-new LotteryCreator().create();
