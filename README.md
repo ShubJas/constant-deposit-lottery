@@ -25,7 +25,7 @@ To uninstall it, execute
 sudo npm uninstall -g 
 ```
 
-If you don't want to trust me, you can execute `index.js`.
+If you don't want to trust me, you can execute `index.js` instead.
 
 
 ### Execution ###
