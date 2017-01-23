@@ -35,12 +35,12 @@ Create a new lottery executing
 lottery start
 ```
 
-It will ask how many level to use, and for the deposit amount.
+It will ask for the number of levels to use and for the deposit amount.
 
 Start a new player by typing
 ```
 lottery player
 ```
 
-It will ask how many level to use, for an id (use a number between 0-3), and for the lottery address.
+It will ask for the number of levels to use, for an id (use a number between 0-3), and for the lottery address.
 The secrets (one for each level) are generated randomly.
