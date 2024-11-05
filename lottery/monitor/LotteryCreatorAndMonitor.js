@@ -1,15 +1,14 @@
-
 module.exports = LotteryCreator;
 
-var conf = require('../../config');
-var utils = require('../../utils/index');
-var Lottery = require('./../core/Lottery');
-var fs = require('fs');
-var async = require('async');
+const conf = require('../../config');
+const utils = require('../../utils/index');
+const fs = require('fs');
+const path = require('path');
+const async = require('async');
 
-var web3 = utils.web3;
-var eth = web3.eth;
-var personal = web3.personal;
+const web3 = utils.web3;
+const eth = web3.eth;
+const personal = web3.personal;
 
 /**
  *
@@ -18,21 +17,27 @@ var personal = web3.personal;
  * @constructor
  */
 function LotteryCreator(levels, deposit) {
-
     this.levels = levels;
     this.deposit = deposit;
 
-    if (this.level<1)
-        throw "level must be >= 1";
+    if (this.levels < 1) {
+        throw new Error("Level must be >= 1");
+    }
 
-    this.contract = utils.compiledContracts()["Lottery"];
+    // Load ABI and bytecode from the Truffle build files
+    const contractPath = path.resolve(__dirname, '../../build/contracts/Lottery.json');
+    const contractData = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
+    
+    this.abi = contractData.abi;
+    this.bytecode = contractData.bytecode;
 }
 
 LotteryCreator.prototype.create = function() {
-    var _this = this;
-    this.adversiteLottery(function (lottery) {
+    const _this = this;
+    this.advertiseLottery(function (lottery) {
         _this.lotteryInstance = lottery;
 
+        // Set up event watchers
         _this.registrationEvent = lottery.RegistrationEvent();
         _this.registrationDoneEvent = lottery.RegistrationDoneEvent();
         _this.allRefundedEvent = lottery.AllRefundedEvent();
@@ -40,129 +45,122 @@ LotteryCreator.prototype.create = function() {
         _this.lotteryWinnerEvent = lottery.LotteryWinnerEvent();
         _this.matchWinnerEvent = lottery.MatchWinnerEvent();
 
-        _this.registrationEvent.watch(function(err,res) {_this.handleRegistrationEvent(err,res)});
-        _this.registrationDoneEvent.watch(function(err,res) {_this.handleRegistrationDoneEvent(err,res)});
-        _this.allRefundedEvent.watch(function(err,res) {_this.handleAllRefundedEvent(err,res)});
-        _this.levelIncreasedEvent.watch(function(err,res) {_this.handleLevelIncreasedEvent(err,res)});
-        _this.lotteryWinnerEvent.watch(function(err,res) {_this.handleLotteryWinnerEvent(err,res)});
-        _this.matchWinnerEvent.watch(function (err,res) {_this.handleMatchWinnerEvent(err,res)})
+        // Event handlers
+        _this.registrationEvent.watch((err, res) => _this.handleRegistrationEvent(err, res));
+        _this.registrationDoneEvent.watch((err, res) => _this.handleRegistrationDoneEvent(err, res));
+        _this.allRefundedEvent.watch((err, res) => _this.handleAllRefundedEvent(err, res));
+        _this.levelIncreasedEvent.watch((err, res) => _this.handleLevelIncreasedEvent(err, res));
+        _this.lotteryWinnerEvent.watch((err, res) => _this.handleLotteryWinnerEvent(err, res));
+        _this.matchWinnerEvent.watch((err, res) => _this.handleMatchWinnerEvent(err, res));
     });
 };
 
-LotteryCreator.prototype.adversiteLottery = function(callback) {
-
-    console.log("Adversiting lottery..");
+LotteryCreator.prototype.advertiseLottery = function(callback) {
+    console.log("Advertising lottery...");
     personal.unlockAccount(
         conf.advertiser.address,
-        conf.advertiser.password);
+        conf.advertiser.password
+    );
 
     /*
      * Create the contract
      */
-    var lotteryContract = web3.eth.contract(this.contract.info.abiDefinition);
+    const lotteryContract = web3.eth.contract(this.abi); // Use loaded ABI
     lotteryContract.new(
         this.levels,
         this.deposit,
         {
             from: conf.advertiser.address,
-            data: this.contract.code,
+            data: this.bytecode, // Use loaded bytecode
             gas: conf.gas,
             gasPrice: conf.gasPrice
         },
-        function (error, lottery){
-
-            if(!error) {
-                // NOTE: The callback will fire twice!
-                // Once the contract has the transactionHash property set and once its deployed on an address.
-
-                // e.g. check tx hash on the first call (transaction send)
-                if(lottery.address) {
+        function (error, lottery) {
+            if (!error) {
+                // The callback will fire twice: once with transactionHash, then with address
+                if (lottery.address) {
                     console.log('Contract mined! https://testnet.etherscan.io/address/' + lottery.address);
                     console.log('Lottery address: ' + lottery.address);
-
-                    console.log();
-                    console.log("-- Registration --");
-                    if(callback) callback(lottery);
+                    console.log("\n-- Registration --");
+                    if (callback) callback(lottery);
+                } else {
+                    console.log("Lottery advertised at https://testnet.etherscan.io/tx/" + lottery.transactionHash);
+                    console.log("Lottery advertised at tx: " + lottery.transactionHash);
                 }
-                else {
-                    console.log("Lottery advertised at https://testnet.etherscan.io/tx/"+lottery.transactionHash);
-                    console.log("Lottery advertised at tx: "+lottery.transactionHash);
-                }
+            } else {
+                console.error("Error deploying contract:", error);
             }
         }
-    )
+    );
 };
 
 LotteryCreator.prototype.handleRegistrationEvent = function(error, result) {
     if (!error) {
-        var addr = result.args._addr;
-        var userid = result.args._userid;
-        var secrets = result.args._secrets;
+        const addr = result.args._addr;
+        const userid = result.args._userid;
+        const secrets = result.args._secrets;
 
-        console.log("lottery addr: "+result.address);
-        console.log("player addr:  "+addr);
-        console.log("userid:       "+userid);
-        console.log("secrets:      "+secrets);
+        console.log("Lottery address: " + result.address);
+        console.log("Player address:  " + addr);
+        console.log("User ID:         " + userid);
+        console.log("Secrets:         " + secrets);
         console.log();
+    } else {
+        console.log("-> Error handling the registration event.");
     }
-    else
-        console.log("-> Error handling the event.")
 };
 
-LotteryCreator.prototype.handleRegistrationDoneEvent = function(err,result) {
+LotteryCreator.prototype.handleRegistrationDoneEvent = function(err, result) {
     if (!err && utils.equalAddresses(result.address, this.lotteryInstance.address)) {
-        console.log("Registration Done");
+        console.log("Registration Completed");
+    } else {
+        console.log("-> Error handling the registration done event.");
     }
-    else
-        this.log("-> Error handling the event.");
 };
 
-LotteryCreator.prototype.handleAllRefundedEvent = function(err,result) {
+LotteryCreator.prototype.handleAllRefundedEvent = function(err, result) {
     if (!err) {
-        console.log();
-        console.log("REFUND: all participants were refunded. Lottery balance is "+eth.getBalance(this.lotteryInstance.address));
+        console.log("\nREFUND: All participants were refunded. Lottery balance is " + eth.getBalance(this.lotteryInstance.address));
         this.cleanWatchers();
+    } else {
+        console.log("-> Error handling the all refunded event.");
     }
-    else
-        console.log("-> Error handling the event.");
 };
 
-LotteryCreator.prototype.handleLevelIncreasedEvent = function(err,result) {
+LotteryCreator.prototype.handleLevelIncreasedEvent = function(err, result) {
     if (!err) {
-        var level = utils.lotteryFromAddress(result.address).level()-1;
-        console.log();
-        console.log("Level "+level+" is done");
+        const level = utils.lotteryFromAddress(result.address).level() - 1;
+        console.log("\nLevel " + level + " is completed");
+    } else {
+        console.log("-> Error handling the level increased event.");
     }
-    else
-        console.log("-> Error handling the event.");
 };
 
-LotteryCreator.prototype.handleMatchWinnerEvent = function(err,result) {
+LotteryCreator.prototype.handleMatchWinnerEvent = function(err, result) {
     if (!err) {
-        var level = result.args._level;
-        var matchId = result.args._matchId;
-        var userId = result.args._userid;
+        const level = result.args._level;
+        const matchId = result.args._matchId;
+        const userId = result.args._userid;
 
-        console.log("Level "+level+" - Match "+matchId+" - winner "+userId);
+        console.log("Level " + level + " - Match " + matchId + " - Winner: " + userId);
+    } else {
+        console.log("-> Error handling the match winner event.");
     }
-    else
-        console.log("-> Error handling the event.");
 };
 
-LotteryCreator.prototype.handleLotteryWinnerEvent = function(err,result) {
+LotteryCreator.prototype.handleLotteryWinnerEvent = function(err, result) {
     if (!err) {
-        var userId = result.args._userid;
-        var winner = utils.lotteryFromAddress(result.address).lotteryWinner();
-        console.log();
-        console.log("*****************************************************************");
+        const userId = result.args._userid;
+        const winner = utils.lotteryFromAddress(result.address).lotteryWinner();
+        console.log("\n*****************************************************************");
         console.log("*                                                               *");
-        console.log("* The winner is: "+userId+" - "+winner+" *");
+        console.log("* The winner is: " + userId + " - " + winner + " *");
         console.log("*                                                               *");
         console.log("*****************************************************************");
         this.cleanWatchers();
+    } else {
+        console.log("-> Error handling the lottery winner event.");
     }
-    else
-        console.log("-> Error handling the event.");
 };
 
 LotteryCreator.prototype.cleanWatchers = function() {

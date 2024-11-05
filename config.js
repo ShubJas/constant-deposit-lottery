@@ -1,37 +1,47 @@
-
 var config = {};
 
-// config.httpProvider = "http://localhost:8545";
-config.httpProvider = "http://bigshow.duckdns.org:8545";
+// Use the local Ganache instance as the HTTP provider
+config.httpProvider = "http://127.0.0.1:8545";
+
+// Set gas limits and gas price
 config.gas = 4700000;
 config.gasPrice = 500000000000;
-config.advertiser = {};
-config.advertiser.address = "0x93471f8bc99114CCf0f9c1e84349c9be390b73E8";
-config.advertiser.password = "";
-config.players = [];
-config.players[0] = {
-    alias : "Alice",
-    address : "0xb2eda2156386a938f4b008410a4dedbd1a51d5e9",
-    password : "",
-    salt : 1
-};
-config.players[1] = {
-    alias: "Bob",
-    address: "0xe2fe120d5bbc9a5af31dd6db5a22f32a055c41ed",
-    password: "",
-    salt: 2
-};
-config.players[2] = {
-    alias: "Carl",
-    address: "0x84df6106d39ef3c896bb37be19f9306186263f53",
-    password: "",
-    salt: 3
-};
-config.players[3] = {
-    alias: "Donald",
-    address: "0xcc5bdc44926d40c57dda3cef4763c808d3c4470e",
-    password: "",
-    salt: 4
-};
 
+// Advertiser account setup
+config.advertiser = {};
+config.advertiser.address = "0x79CD4971ac989408B8Bbe395578E2C01363F3724"; // Update with the Ganache account address if needed
+config.advertiser.password = "";  // If a password is required, add it here (Ganache usually doesn’t require one)
+
+// Player accounts setup
+config.players = [
+    {
+        alias : "Shuaib",
+        address : "0x44d30D4CE2C78421f072b71ec3A4bA7a695b4a80",
+        password : "",
+        salt : 1
+    },
+    {
+        alias: "Jaheer",
+        address: "0x95b37674a1c35070e6AE63C10F6aCBaa040767C6",
+        password: "",
+        salt: 2
+    },
+    {
+        alias: "Dishad",
+        address: "0x75A971D0AAc8863caBD0d8bB0280030c126db61C",
+        password: "",
+        salt: 3
+    },
+    {
+        alias: "Fahim",
+        address: "0x64E7e01751ccF270832eD24DbF70978d50Cb261B",
+        password: "",
+        salt: 4
+    }
+];
+
+
+
+
+// Export the configuration
 module.exports = config;
