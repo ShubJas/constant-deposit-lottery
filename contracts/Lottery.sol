@@ -35,9 +35,9 @@ contract Lottery {
     uint public L;
     uint public DEPOSIT;
 
-    uint TIMEOUT_INIT = 5 minutes;
-    uint TIMEOUT_TURN_X = 5 minutes;
-    uint TIMEOUT_TURN_Y = 5 minutes;
+    uint TIMEOUT_INIT = 25 minutes;
+    uint TIMEOUT_TURN_X = 25 minutes;
+    uint TIMEOUT_TURN_Y = 25 minutes;
 
     Player[] players;
     mapping(address => uint) addressToId;
